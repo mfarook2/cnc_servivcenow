@@ -36,8 +36,8 @@ Ticket_Token_Header_JSON = {
     'Cache-Control': "no-cache",
 }
 
-serviceNowURL = 'https://dev252137.service-now.com/api/now/table/incident'
-authorization = 'YWRtaW46ai1QOU51NGtFZXMqRkJwQw=='
+serviceNowURL = 'https://<instanceID>.service-now.com/api/now/table/incident'
+authorization = '<Authorization token>'
 
 def create_servicenow_ticket(alert):
     """
@@ -59,8 +59,7 @@ def create_servicenow_ticket(alert):
     if alert_data != None:
         json_alert = json.loads(alert_data)
         print ("json_alert type  :  ", type(json_alert))
-        #url = 'https://dev252137.service-now.com/api/now/table/incident'
-        url = 'https://dev241067.service-now.com/api/now/table/incident'
+        url = serviceNowURL
         ticket_short_description = json_alert["ietf-restconf:notification"]["cisco-crosswork-service-health:service-health-notification"]["service-health-report"]["service-id"]
         ticket_description = json_alert["ietf-restconf:notification"]["cisco-crosswork-service-health:service-health-notification"]["service-health-report"]
         ticket_comments = 'Alright, team, our network has been moving slower than a snail on a coffee break! Lets give it a caffeine boost.'
@@ -162,7 +161,7 @@ class Crosswork:
         Raises:
             None
         """
-        url = 'https://172.18.116.30:30603/crosswork/nbi/cat-inventory/v1/restconf/notif/notification-stream/cisco-crosswork-service-health:service-health-notification/JSON'
+        url = 'https://<IP Address of CWM>:30603/crosswork/nbi/cat-inventory/v1/restconf/notif/notification-stream/cisco-crosswork-service-health:service-health-notification/JSON'
         headers = {
             'Content-Type': 'application/json',
             'Authorization': "Bearer " + self.get_token(),
