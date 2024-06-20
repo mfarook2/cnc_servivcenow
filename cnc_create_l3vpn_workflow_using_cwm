@@ -1,0 +1,122 @@
+{
+  "id": "configureL3vpn",
+  "name": "configureL3vpn",
+  "start": {
+    "stateName": "cncAuthenticate"
+  },
+  "states": [
+    {
+      "end": true,
+      "name": "createL3vpn",
+      "type": "operation",
+      "actions": [
+        {
+          "name": "configurel3vpn",
+          "functionRef": {
+            "refName": "REST.Post",
+            "arguments": {
+              "input": {
+                "data": "${ .cw_payload |  tostring }",
+                "path": "crosswork/proxy/nso/restconf/data/ietf-l3vpn-ntw:l3vpn-ntw/vpn-services",
+                "header": {
+                  "Accept": "application/yang-data+json",
+                  "Content-Type": "application/yang-data+json",
+                  "Authorization": "Bearer ${ .getTokenResult }",
+                  "Cache-Control": "no-cache"
+                }
+              },
+              "config": {
+                "resourceId": "cnc"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cncAuthenticate",
+      "type": "operation",
+      "actions": [
+        {
+          "name": "getTicket",
+          "retryRef": "Default",
+          "functionRef": {
+            "refName": "REST.Post",
+            "arguments": {
+              "input": {
+                "data": "{}",
+                "path": "crosswork/sso/v1/tickets?username=${ .cw_username }&password=${ .cw_password }",
+                "header": {
+                  "Accept": "text/plain",
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "Cache-Control": "no-cache"
+                }
+              },
+              "config": {
+                "resourceId": "cnc"
+              }
+            }
+          },
+          "actionDataFilter": {
+            "results": "${ if (.data) then .data else null end }",
+            "toStateData": "${ .getTicketResult }"
+          }
+        },
+        {
+          "name": "getToken",
+          "retryRef": "Default",
+          "functionRef": {
+            "refName": "REST.Post",
+            "arguments": {
+              "input": {
+                "data": "service=https%3A%2F%2F${ .cw_host }%3A30603%2F%23%2Fapp-dashboard",
+                "path": "crosswork/sso/v1/tickets/${ .getTicketResult }",
+                "header": {
+                  "Accept": "text/plain",
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "Cache-Control": "no-cache"
+                }
+              },
+              "config": {
+                "resourceId": "cnc"
+              }
+            }
+          },
+          "actionDataFilter": {
+            "results": "${ if (.data) then .data else null end }",
+            "toStateData": "${ .getTokenResult }"
+          }
+        }
+      ],
+      "transition": "createL3vpn"
+    }
+  ],
+  "retries": [
+    {
+      "name": "Default",
+      "delay": "PT10S",
+      "multiplier": 1,
+      "maxAttempts": 1
+    },
+    {
+      "name": "Reboot",
+      "delay": "PT1M",
+      "multiplier": 0,
+      "maxAttempts": 1
+    }
+  ],
+  "version": "1.0.0",
+  "functions": [
+    {
+      "name": "REST.Post",
+      "operation": "generic.rest.v1.0.1.request.Post"
+    },
+    {
+      "name": "REST.Patch",
+      "operation": "generic.rest.v1.0.1.request.Patch"
+    }
+  ],
+  "description": "CNC service Provisioning",
+  "specVersion": "0.9",
+  "expressionLang": "jq"
+}
